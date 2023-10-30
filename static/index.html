@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>png_2_raw</title>
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body>
+    <div class="operation">
+      <button class="btn-upload" onclick="onUpload()">选择png图片上传</button>
+
+      <button onclick="onTrans()">开始转换</button>
+
+      <input
+        type="file"
+        id="upload"
+        multiple
+        hidden
+        accept="image/png"
+        oninput="onSelectFile(event)"
+      />
+    </div>
+    <div class="file-list"></div>
+    <script>
+      function onInit() {
+        const eleFileList = document.querySelector(".file-list");
+
+        // 初始化表头
+        const eleTabelHeader = document.createElement("div");
+        eleTabelHeader.className = "file-list__header";
+        const eleHeaderCol1 = document.createElement("span");
+        eleHeaderCol1.className = "name";
+        eleHeaderCol1.innerText = "文件名称";
+
+        const eleHeaderCol2 = document.createElement("span");
+        eleHeaderCol2.className = "size";
+        eleHeaderCol2.innerText = "文件大小(Kb)";
+
+        const eleHeaderCol3 = document.createElement("span");
+        eleHeaderCol3.className = "image";
+        eleHeaderCol3.innerText = "图片预览";
+        eleTabelHeader.appendChild(eleHeaderCol1);
+        eleTabelHeader.appendChild(eleHeaderCol2);
+        eleTabelHeader.appendChild(eleHeaderCol3);
+        eleFileList.appendChild(eleTabelHeader);
+      }
+
+      // 触发选择文件窗口
+      function onUpload() {
+        const eleUpload = document.querySelector("#upload");
+        eleUpload.click();
+      }
+
+      // 解析上传文件
+      function onSelectFile(e) {
+        const fileList = e.target.files;
+        renderFiles(fileList);
+      }
+
+      // 渲染文件列表
+      function renderFiles(fileList) {
+        const eleFileList = document.querySelector(".file-list");
+
+        for (element of fileList) {
+          const eleItem = document.createElement("div");
+          eleItem.className = "file-item";
+
+          const eleSpanName = document.createElement("span");
+          eleSpanName.innerText = element.name;
+          eleSpanName.className = "file-item__name";
+
+          const eleSpanSizeKb = document.createElement("span");
+          eleSpanSizeKb.innerText = (element.size / 1024).toFixed(2);
+          eleSpanSizeKb.className = "file-item__size";
+
+          const eleImage = document.createElement("img");
+          eleImage.className = "file-item__image";
+
+          if (element) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              eleImage.src = e.target.result;
+            };
+            reader.readAsDataURL(element);
+          }
+
+          eleItem.appendChild(eleSpanName);
+          eleItem.appendChild(eleSpanSizeKb);
+          eleItem.appendChild(eleImage);
+          eleFileList.appendChild(eleItem);
+        }
+      }
+      function onTrans() {
+        const eleUpload = document.querySelector("#upload");
+        const formData = new FormData();
+
+        for (item of eleUpload.files) {
+          formData.append("images", item);
+        }
+
+        fetch("/api/png2raw", {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      onInit();
+    </script>
+  </body>
+</html>
