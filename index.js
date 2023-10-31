@@ -1,13 +1,15 @@
-import express from "express";
-import path from "node:path";
-import fs from "fs";
-import formidable from "express-formidable";
-import bodyParser from "body-parser";
+const express = require("express");
+const fs = require("fs");
+const formidable = require("express-formidable");
+const bodyParser = require("body-parser");
+const path = require("path");
+
+const pngTool = require("./png2raw");
+
 const app = express();
 app.use(bodyParser.json());
 app.use(formidable({ maxFileSize: 1024 * 10, multiples: true }));
 
-const __dirname = path.resolve();
 app.use(express.static(__dirname + "/static"));
 
 app.get("/png2raw", (_, res) => {
@@ -24,14 +26,20 @@ app.get("/png2raw", (_, res) => {
   });
 });
 
-app.post("/api/png2raw", (req, res) => {  
+app.post("/api/png2raw", (req, res) => {
   const files = req.files.images;
-
+  const resData = {
+    images: [],
+  };
   for (let item of files) {
-    console.log(item.name, item.size);
+    const byteData = pngTool.pngToraw(item.path);
+    resData.images.push({
+      name: item.name,
+      data: byteData,
+    });
   }
 
-  res.send("ok");
+  res.send(resData);
 });
 
 app.listen(3000);

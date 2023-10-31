@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import { PNG } from "pngjs";
+const fs = require("fs");
+const PNG = require("pngjs").PNG;
 
 function writeRGB565(pixelList) {
   const byteArr = [];
@@ -15,30 +15,22 @@ function writeRGB565(pixelList) {
   return Buffer.from(byteArr);
 }
 
-const inputFilePath = "images/Wechat.png";
-const outputFilePath = "images/Wechat.raw";
-
-fs.createReadStream(inputFilePath)
-  .pipe(new PNG())
-  .on("parsed", function () {
-    const pixelData = [];
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const idx = (this.width * y + x) << 2; // RGBA
-        const r = this.data[idx];
-        const g = this.data[idx + 1];
-        const b = this.data[idx + 2];
-        pixelData.push([r, g, b]);
-      }
+function pngToraw(pngPath) {
+  const data = fs.readFileSync(pngPath);
+  const png = PNG.sync.read(data);
+  const pixelData = [];
+  for (let y = 0; y < png.height; y++) {
+    for (let x = 0; x < png.width; x++) {
+      const idx = (png.width * y + x) << 2; // RGBA
+      const r = png.data[idx];
+      const g = png.data[idx + 1];
+      const b = png.data[idx + 2];
+      pixelData.push([r, g, b]);
     }
+  }
 
-    const byteData = writeRGB565(pixelData);
+  const byteData = writeRGB565(pixelData);
+  return byteData;
+}
 
-    fs.writeFile(outputFilePath, byteData, (err) => {
-      if (err) {
-        console.error("无法保存文件", err);
-      } else {
-        console.log("成功保存文件");
-      }
-    });
-  });
+module.exports.pngToraw = pngToraw;
